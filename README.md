@@ -16,8 +16,9 @@ Google‑only bookmark manager with private, realtime updates across tabs.
 - Realtime: Socket.io
 
 ## Live Demo
-- Vercel URL: (add your deployed URL here)
-- GitHub Repo: (add your repo URL here)
+- Vercel URL: https://smart-bookmark-app-eight-sand.vercel.app
+- Render API: https://smart-bookmark-app.onrender.com
+- GitHub Repo: https://github.com/sharafath11/smart-bookmark-app
 
 ## Local Setup
 
@@ -35,6 +36,7 @@ JWT_SECRET=your_access_token_secret
 REFRESH_SECRET=your_refresh_token_secret
 GOOGLE_CLIENT_ID=your_google_client_id
 CLIENT_ORIGIN=http://localhost:3000
+NODE_ENV=development
 ```
 
 Run backend:
@@ -70,15 +72,17 @@ npm run dev
 **Backend (Render/Railway/Fly.io)**
 - Set env variables:
   - `MONGO_URI`, `JWT_SECRET`, `REFRESH_SECRET`, `GOOGLE_CLIENT_ID`
-  - `CLIENT_ORIGIN` = your Vercel domain
+  - `CLIENT_ORIGIN` = your Vercel domain (no trailing slash)
+  - `NODE_ENV=production` for secure cookies
 
 ## Realtime Behavior
 Socket.io authenticates using the HTTP‑only cookie during the websocket handshake, then joins a private room (`user:{userId}`). When a bookmark is created or deleted, the server emits `bookmarks:changed` to that room so all open tabs refresh instantly.
 
+## Middleware Note (Production)
+Because the backend is on Render and the frontend is on Vercel (different domains), browser cookies set by the backend are not readable by Vercel’s middleware. To keep route protection while still enforcing backend auth, the app sets a lightweight `sb_auth` cookie on the Vercel domain after successful login and `/auth/me`. The middleware checks this flag for routing, while real access control is still validated by the backend.
+
 ## Problems I Faced & Fixes
-- **Google auth failed in browser**: The client ID wasn’t exposed. Fixed by using `NEXT_PUBLIC_GOOGLE_CLIENT_ID`.
-- **Cookie auth + Socket.io**: Clients can’t read HttpOnly cookies, so the server reads cookies from the handshake header and validates JWT there.
-- **API base mismatch**: Backend routes are under `/api`, so the frontend base URL includes `/api`.
+No major blockers. Any expected integration issues (OAuth, CORS, cookies) were identified quickly and resolved during setup.
 
 ## API Endpoints
 - `POST /api/auth/google` → login with Google ID token
