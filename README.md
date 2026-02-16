@@ -1,165 +1,90 @@
-# SessionKit – Production-Ready Full-Stack Authentication Boilerplate
+# Smart Bookmark App
 
-**SessionKit** is a production-ready authentication starter kit built with modern web technologies. It provides a solid foundation for secure applications with features such as JWT session management, OTP verification, Google OAuth integration, and a clean, scalable architecture.
+Google‑only bookmark manager with private, realtime updates across tabs.
 
----
-
-## Key Features
-
-- **Multi-Strategy Authentication**
-  - Email & Password
-  - Google OAuth (Register & Login)
-
-- **OTP Verification**
-  - Email-based OTP during registration
-  - Redis-backed OTP storage with TTL
-
-- **Security First**
-  - JWT Access & Refresh token rotation
-  - HTTP-only cookies to prevent XSS
-  - Automatic token refresh using Axios interceptors
-
-- **Clean Architecture**
-  - Backend: Controller–Service–Repository pattern with Dependency Injection (Tsyringe)
-  - Frontend: Next.js App Router with centralized API methods and hooks
-
-- **Modern UI**
-  - Authentication pages and dashboard built with Tailwind CSS and Radix UI
-
-- **Type Safety**
-  - End-to-end TypeScript across frontend and backend
-
----
+## Requirements Covered
+- Google OAuth only (no email/password)
+- Add bookmarks (title + URL)
+- Private data per user
+- Realtime updates across multiple tabs
+- Delete bookmarks
+- Vercel deployment ready
 
 ## Tech Stack
+- Frontend: Next.js (App Router), TypeScript, Tailwind CSS
+- Backend: Node.js, Express, TypeScript, MongoDB (Mongoose)
+- Realtime: Socket.io
 
-### Backend
-- Node.js
-- Express.js
-- TypeScript
-- MongoDB (Mongoose)
-- Redis (ioredis)
-- Tsyringe (Dependency Injection)
-- Nodemailer
+## Live Demo
+- Vercel URL: (add your deployed URL here)
+- GitHub Repo: (add your repo URL here)
 
-### Frontend
-- Next.js (App Router)
-- TypeScript
-- Tailwind CSS
-- Radix UI
-- Axios (with interceptors)
-- Sonner
-- React Hook Form + Zod
+## Local Setup
 
----
-
-## Getting Started
-
-### Prerequisites
-- Node.js (v18+)
-- MongoDB (Local or Atlas)
-- Redis (Local, Docker, or Upstash)
-
----
-
-### 1. Clone the Repository
-
+### 1) Backend
 ```bash
-git clone https://github.com/sharafath11/SessionKit.git
-cd SessionKit
-2. Backend Setup
-bash
-Copy code
 cd server
 npm install
-Create a .env file inside the server directory:
+```
 
-env
-Copy code
+Create `server/.env`:
+```bash
 PORT=5000
-MONGODB_URI=your_mongodb_uri
-REDIS_URL=your_redis_url
+MONGO_URI=your_mongodb_uri
 JWT_SECRET=your_access_token_secret
 REFRESH_SECRET=your_refresh_token_secret
-EMAIL_USER=your_gmail@gmail.com
-EMAIL_PASS=your_gmail_app_password
 GOOGLE_CLIENT_ID=your_google_client_id
-GOOGLE_CLIENT_SECRET=your_google_client_secret
-Start the backend server:
+CLIENT_ORIGIN=http://localhost:3000
+```
 
-bash
-Copy code
+Run backend:
+```bash
 npm run dev
-3. Frontend Setup
-bash
-Copy code
-cd ../client
+```
+
+### 2) Frontend
+```bash
+cd client
 npm install
-Create a .env.local file inside the client directory:
+```
 
-env
-Copy code
-NEXT_PUBLIC_BASEURL=http://localhost:5000
-Start the frontend:
+Create `client/.env`:
+```bash
+NEXT_PUBLIC_BASEURL=http://localhost:5000/api
+NEXT_PUBLIC_SOCKET_URL=http://localhost:5000
+NEXT_PUBLIC_GOOGLE_CLIENT_ID=your_google_client_id
+```
 
-bash
-Copy code
+Run frontend:
+```bash
 npm run dev
-Architecture Overview
-Backend Structure
-src/controller – HTTP request handling
+```
 
-src/services – Business logic
+## Deployment Notes
+**Frontend (Vercel)**
+- Set env variables:
+  - `NEXT_PUBLIC_BASEURL` = `https://your-backend-domain/api`
+  - `NEXT_PUBLIC_SOCKET_URL` = `https://your-backend-domain`
+  - `NEXT_PUBLIC_GOOGLE_CLIENT_ID` = your Google OAuth client ID
 
-src/repository – Database access
+**Backend (Render/Railway/Fly.io)**
+- Set env variables:
+  - `MONGO_URI`, `JWT_SECRET`, `REFRESH_SECRET`, `GOOGLE_CLIENT_ID`
+  - `CLIENT_ORIGIN` = your Vercel domain
 
-src/core/di – Dependency Injection container
+## Realtime Behavior
+Socket.io authenticates using the HTTP‑only cookie during the websocket handshake, then joins a private room (`user:{userId}`). When a bookmark is created or deleted, the server emits `bookmarks:changed` to that room so all open tabs refresh instantly.
 
-src/middleware – Authentication and error handling
+## Problems I Faced & Fixes
+- **Google auth failed in browser**: The client ID wasn’t exposed. Fixed by using `NEXT_PUBLIC_GOOGLE_CLIENT_ID`.
+- **Cookie auth + Socket.io**: Clients can’t read HttpOnly cookies, so the server reads cookies from the handshake header and validates JWT there.
+- **API base mismatch**: Backend routes are under `/api`, so the frontend base URL includes `/api`.
 
-src/utils – JWT, OTP, Redis, and mail utilities
-
-Frontend Structure
-app/(auth) – Login, Register, OTP verification
-
-app/dashboard – Protected user dashboard
-
-services/ – Axios instance and API methods
-
-components/ – Reusable UI components
-
-Security Implementation
-JWT Rotation
-
-Short-lived access token
-
-Long-lived refresh token
-
-Automatic refresh via Axios interceptor
-
-Session Handling
-
-Tokens stored in HTTP-only cookies
-
-User session fetched via /auth/me
-
-Logout
-
-Clears access and refresh token cookies
-
-Immediately invalidates the session
-
-OTP Security
-
-OTPs stored only in Redis
-
-Automatic expiration using TTL
-
-No OTP persistence in the database
-
-License
-This project is licensed under the ISC License.
-
-Author
-Sharafath
-GitHub: https://github.com/sharafath11
+## API Endpoints
+- `POST /api/auth/google` → login with Google ID token
+- `GET /api/auth/me` → current user
+- `POST /api/auth/logout` → logout
+- `POST /api/auth/refresh-token` → refresh access token
+- `GET /api/bookmarks` → list bookmarks
+- `POST /api/bookmarks` → add bookmark
+- `DELETE /api/bookmarks/:id` → remove bookmark

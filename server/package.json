@@ -25,6 +25,7 @@
     "mongoose": "^8.19.1",
     "nodemailer": "^7.0.12",
     "reflect-metadata": "^0.2.2",
+    "socket.io": "^4.8.1",
     "tsyringe": "^4.10.0"
   },
   "devDependencies": {

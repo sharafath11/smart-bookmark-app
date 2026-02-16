@@ -10,95 +10,14 @@ import {
   sendResponse,
   throwError,
 } from "../utils/response";
-import { validateBodyFields } from "../utils/validateRequest";
 import { clearTokens, decodeToken, refreshAccessToken, setTokensInCookies } from "../lib/jwtToken";
+import { validateBodyFields } from "../utils/validateRequest";
 
 @injectable()
 export class AuthController implements IAuthController {
   constructor(
     @inject(TYPES.IAuthServices) private  _authServices: IAuthService
   ) {}
-
-  async login(req: Request, res: Response): Promise<void> {
-    try {
-      validateBodyFields(req, ["email", "password"])
-      const { email, password } = req.body;
-      if (!email || !password) throwError(MESSAGES.COMMON.MISSING_FIELDS,StatusCode.BAD_REQUEST);
-
-      const result = await this._authServices.login(email, password);
-      setTokensInCookies(res,result.tocken,result.refreshToken)
-      sendResponse(
-        res,
-        StatusCode.OK,
-        MESSAGES.AUTH.LOGIN_SUCCESS,
-        true,
-        result
-      );
-    } catch (error) {
-      handleControllerError(res, error);
-    }
-  }
-
-  async signup(req: Request, res: Response): Promise<void> {
-    try {
-      const { fullName, email, password } = req.body;
-      validateBodyFields(req, ["fullName","email", "password"])
-      await this._authServices.signup({
-        name:fullName,
-        email,
-        password,
-        isVerified:false
-      });
-
-      sendResponse(
-        res,
-        StatusCode.CREATED,
-        MESSAGES.AUTH.REGISTRATION_SUCCESS,
-        true,
-        null
-      );
-    } catch (error) {
-      handleControllerError(res, error);
-    }
-  }
-
-  async verifyOtp(req: Request, res: Response): Promise<void> {
-    try {
-      validateBodyFields(req, ["email", "otp"]);
-      const { email, otp } = req.body;
-
-      await this._authServices.verifyOtp(email, otp);
-
-      sendResponse(
-        res,
-        StatusCode.OK,
-        MESSAGES.AUTH.VERIFICATION_SUCCESS,
-        true,
-        null
-      );
-    } catch (error) {
-      handleControllerError(res, error);
-    }
-  }
-
-  async resendOtp(req: Request, res: Response): Promise<void> {
-    try {
-      validateBodyFields(req, ["email"]);
-      const { email } = req.body;
-
-      await this._authServices.resendOtp(email);
-
-      sendResponse(
-        res,
-        StatusCode.OK,
-        MESSAGES.AUTH.OTP_SENT,
-        true,
-        null
-      );
-    } catch (error) {
-      handleControllerError(res, error);
-    }
-  }
 
   async getCurrentUser(req: Request, res: Response): Promise<void> {
     try {

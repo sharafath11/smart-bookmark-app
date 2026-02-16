@@ -23,6 +23,7 @@ export const authenticateToken = (
     
     if (decoded?.id && decoded.role === 'user') {
       console.log("[Middleware] Access token valid for user:", decoded.id);
+      (req as Request & { userId?: string }).userId = decoded.id;
       return next();
     }
 

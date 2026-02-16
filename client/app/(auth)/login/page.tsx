@@ -1,28 +1,15 @@
 "use client"
 
-import type React from "react"
-
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import Link from "next/link"
 import { AuthCard } from "@/components/auth-card"
 import { Button } from "@/components/button"
-import { Input } from "@/components/input"
-import { PasswordInput } from "@/components/password-input"
-import { Divider } from "@/components/divider"
 import { Alert } from "@/components/alert"
 import { userAuthMethods } from "@/services/methods/userMethods"
-import { validateLogin } from "@/lib/validation/auth.validation"
-import { showErrorToast, showInfoToast, showSuccessToast } from "@/utils/toast"
+import { showErrorToast, showSuccessToast } from "@/utils/toast"
 
 export default function LoginPage() {
   const router = useRouter()
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  })
-  const [errors, setErrors] = useState<Record<string, string>>({})
-  const [isLoading, setIsLoading] = useState(false)
   const [isGoogleLoading, setIsGoogleLoading] = useState(false)
   const [alertMessage, setAlertMessage] = useState<string>("")
 
@@ -81,97 +68,10 @@ export default function LoginPage() {
     }
   }
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
-    if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: "" }))
-    }
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-
-    const validationErrors = validateLogin(formData)
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors)
-      return
-    }
-
-    setIsLoading(true)
-    setAlertMessage("")
-
-    const res = await userAuthMethods.login({
-      email: formData.email,
-      password: formData.password,
-    })
-
-    setIsLoading(false)
-
-    if (!res || !res.ok) {
-      const errorMsg = res?.msg || "Login failed"
-      
-      if (errorMsg.toLowerCase().includes("verify")) {
-        setAlertMessage(errorMsg)
-        showInfoToast(errorMsg)
-        sessionStorage.setItem("verifyEmail", formData.email)
-        router.push("/register/verify")
-        return
-      }
-
-      setAlertMessage(errorMsg)
-      showErrorToast(errorMsg)
-      return
-    }
-
-    showSuccessToast(res.msg || "Login successful")
-    router.push("/dashboard")
-  }
-
-  const isFormValid = formData.email.trim() && formData.password
-
   return (
-    <AuthCard title="Sign in" description="Welcome back to your account">
-      <form onSubmit={handleSubmit} className="space-y-4">
+    <AuthCard title="Sign in" description="Google account required">
+      <div className="space-y-4">
         {alertMessage && <Alert type="error" message={alertMessage} onClose={() => setAlertMessage("")} />}
-
-        <Input
-          label="Email Address"
-          name="email"
-          type="email"
-          value={formData.email}
-          onChange={handleChange}
-          placeholder="you@example.com"
-          error={errors.email}
-        />
-
-        <PasswordInput
-          label="Password"
-          name="password"
-          value={formData.password}
-          onChange={handleChange}
-          placeholder="••••••••"
-          error={errors.password}
-        />
-
-        <div className="flex justify-end">
-          <Link href="/forgot-password" className="text-xs font-medium text-foreground hover:underline">
-            Forgot password?
-          </Link>
-        </div>
-
-        <Button
-          type="submit"
-          variant="primary"
-          size="lg"
-          className="w-full"
-          disabled={!isFormValid}
-          isLoading={isLoading}
-        >
-          Sign in
-        </Button>
-
-        <Divider text="or" />
 
         <Button type="button" variant="secondary" size="lg" className="w-full" onClick={handleGoogleSignIn} isLoading={isGoogleLoading}>
           <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
@@ -184,12 +84,9 @@ export default function LoginPage() {
         </Button>
 
         <p className="text-center text-sm text-muted-foreground">
-          Don't have an account?{" "}
-          <Link href="/register" className="font-medium text-foreground hover:underline">
-            Create one
-          </Link>
+          We only support Google Sign-In for this app.
         </p>
-      </form>
+      </div>
     </AuthCard>
   )
 }

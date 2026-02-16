@@ -10,9 +10,6 @@ import { UserResponseMapper } from "../dtos/user/userResponseMapper";
 import { IUserDto, IUserLoginDTO } from "../dtos/user/IUserDto";
 
 import { generateAccessToken, generateRefreshToken } from "../lib/jwtToken";
-import { generateOtp, OTP_TTL_SECONDS } from "../utils/otp.util";
-import { redis } from "../utils/redis";
-import { sendEmailOtp } from "../utils/mail.util";
 
 @injectable()
 export class AuthService implements IAuthService {
@@ -20,85 +17,6 @@ export class AuthService implements IAuthService {
     @inject(TYPES.IAuthRepository)
     private  _authRepo: IAuthRepository
   ) {}
-
-  async login(email: string, password: string): Promise<IUserLoginDTO> {
-    const user = await this._authRepo.findOne({ email });
-    if (!user) throwError(MESSAGES.AUTH.NOT_FOUND);
-
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) throwError(MESSAGES.AUTH.INVALID_CREDENTIALS);
-
-    if (!user.isVerified) throwError(MESSAGES.AUTH.AUTH_REQUIRED);
-
-    const token = generateAccessToken(user._id as unknown as string,"user");
-    const refreshToken = generateRefreshToken(user._id as unknown as string,"user");
-    return UserResponseMapper.toLoginUserResponse(user,token,refreshToken);
-  }
-
-async signup(data: { name: string; email: string; password: string }):Promise<void> {
-  const existingUser = await this._authRepo.findOne({ email: data.email });
-  if (existingUser?.isVerified) {
-    throwError(MESSAGES.AUTH.USER_ALREADY_EXISTS);
-  }
-  let user;
-  const hashedPassword = await bcrypt.hash(data.password, 10);
-  if (existingUser && !existingUser.isVerified) {
-    user = existingUser;
-  } 
-  else {
-    user = await this._authRepo.create({
-      username: data.name,
-      email: data.email,
-      password: hashedPassword,
-      isVerified: false,
-    });
-  }
-
-  if (!user) {
-    throwError(MESSAGES.COMMON.SERVER_ERROR);
-  }
-
-  const otp = generateOtp();
-  const redisKey = `otp:register:${user._id}`;
-  const existingOtp = await redis.get(redisKey);
-  if (existingOtp) {
-    throwError(MESSAGES.AUTH.OTP_ALREADY_SENT);
-  }
-
-  await redis.set(redisKey, otp, "EX", OTP_TTL_SECONDS);
-  await sendEmailOtp(user.email, otp);
-
-}
-
-
-  async verifyOtp(email: string, otp: string): Promise<void> {
-    const user = await this._authRepo.findOne({ email });
-    if (!user) throwError(MESSAGES.AUTH.NOT_FOUND);
-    
-    const redisKey = `otp:register:${user._id}`;
-    const storedOtp = await redis.get(redisKey);
-    
-    if (!storedOtp) throwError(MESSAGES.AUTH.OTP_EXPIRED);
-    if (storedOtp !== otp) throwError(MESSAGES.AUTH.INVALID_OTP);
-    
-    await this._authRepo.update(user._id as unknown as string, {
-      isVerified: true,
-    });
-    
-    await redis.del(redisKey);
-  }
-
-  async resendOtp(email: string): Promise<void> {
-    const user = await this._authRepo.findOne({ email });
-    if (!user) throwError(MESSAGES.AUTH.NOT_FOUND);
-    if (user.isVerified) throwError(MESSAGES.AUTH.ALREADY_REGISTERED);
-    
-    const otp = generateOtp();
-    const redisKey = `otp:register:${email}`;
-    
-    await redis.set(redisKey, otp, "EX", OTP_TTL_SECONDS);
-    await sendEmailOtp(user.email, otp);
-  }
 
   async getUser(id: string): Promise<IUserDto> {
     const user = await this._authRepo.findById(id);
@@ -149,6 +67,7 @@ async signup(data: { name: string; email: string; password: string }):Promise<vo
       const refreshToken = generateRefreshToken(user._id as unknown as string, "user");
       return UserResponseMapper.toLoginUserResponse(user, token, refreshToken);
     } catch (error: any) {
+      console.log("error ",error)
       if (error.message && !error.message.includes("Google")) {
         throw error;
       }

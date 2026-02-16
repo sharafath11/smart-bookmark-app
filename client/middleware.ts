@@ -10,7 +10,7 @@ export function middleware(request: NextRequest) {
   const isAuthenticated = Boolean(token || refreshToken)
 
   const isAuthPage =
-    pathname === "/login" || pathname === "/register"
+    pathname === "/login"
 
   const isPublicPage = pathname === "/"
 
@@ -38,7 +38,6 @@ export const config = {
   matcher: [
     "/",
     "/login",
-    "/register",
     "/dashboard/:path*",
   ],
 }

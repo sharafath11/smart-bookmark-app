@@ -68,4 +68,11 @@ export const MESSAGES = {
     INVALID_CURRENT: "Invalid current password.",
     EMAIL_FAILED: "Failed to send reset email. Try again later.",
   },
+  BOOKMARK: {
+    CREATED: "Bookmark added.",
+    LIST_SUCCESS: "Bookmarks fetched successfully.",
+    DELETED: "Bookmark deleted.",
+    INVALID_INPUT: "Please provide a valid title and URL.",
+    NOT_FOUND: "Bookmark not found.",
+  },
 };
