@@ -1,4 +1,4 @@
-import { Response } from "express";
+import { Response, CookieOptions } from "express";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import { TokenPayload } from "../types/authTypes";
@@ -11,22 +11,20 @@ const REFRESH_EXPIRES_IN = "7d";
 
 
 const isProduction = process.env.NODE_ENV === "production";
-const cookieOptions = {
+
+console.log(`[Auth Service] Cookie Configuration:
+  NODE_ENV: ${process.env.NODE_ENV}
+  isProduction: ${isProduction}
+  COOKIE_SECURE: ${process.env.COOKIE_SECURE || (isProduction ? 'true' : 'false')}
+  COOKIE_SAMESITE: ${process.env.COOKIE_SAMESITE || (isProduction ? 'none' : 'lax')}
+`);
+
+const cookieOptions: CookieOptions = {
   httpOnly: true,
-  secure: isProduction,
-  sameSite: (isProduction ? "none" : "lax") as "none" | "lax",
+  secure: process.env.COOKIE_SECURE === 'true' || isProduction,
+  sameSite: (process.env.COOKIE_SAMESITE as "lax" | "strict" | "none") || (isProduction ? "none" : "lax"),
   path: "/",
 };
-
-
-
-// const cookieOptions = {
-//   httpOnly: true,
-//   secure: process.env.NODE_ENV === "production", 
-//   sameSite: "none" as const,                    
-//   domain: ".sharafathabi.cloud", 
-//   path: "/",                                     
-// };
 
 export const generateAccessToken = (id: string, role: string): string => {
   const payload: TokenPayload = { id, role };
@@ -67,6 +65,11 @@ export const setTokensInCookies = (
   accessToken: string,
   refreshToken: string
 ) => {
+  console.log(`[Auth Service] Setting cookies:
+    Access Token: ${accessToken ? 'Present' : 'Missing'}
+    Refresh Token: ${refreshToken ? 'Present' : 'Missing'}
+    Options: ${JSON.stringify(cookieOptions)}
+  `);
   res.cookie("token", accessToken, cookieOptions);
   res.cookie("refreshToken", refreshToken, cookieOptions);
 };
@@ -75,5 +78,6 @@ export const clearTokens = (res: Response) => {
   res.clearCookie("token", cookieOptions);
   res.clearCookie("refreshToken", cookieOptions);
 };
+
 
 
