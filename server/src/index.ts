@@ -1,5 +1,4 @@
 import "reflect-metadata";
-import "./types/express";
 import express from "express";
 import http from "http";
 import "./core/di/container"; 
