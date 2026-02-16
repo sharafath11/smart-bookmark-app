@@ -1,4 +1,4 @@
-import { Server } from "socket.io";
+import { Server, Socket } from "socket.io";
 import http from "http";
 import { verifyAccessToken } from "./jwtToken";
 
@@ -22,7 +22,7 @@ export const initSocket = (server: http.Server, allowedOrigins: string[]) => {
     },
   });
 
-  io.use((socket, next) => {
+  io.use((socket: Socket, next) => {
     const cookies = parseCookies(socket.request.headers.cookie);
     const token = cookies.token;
     if (!token) return next(new Error("Unauthorized"));
@@ -39,7 +39,7 @@ export const initSocket = (server: http.Server, allowedOrigins: string[]) => {
     }
   });
 
-  io.on("connection", (socket) => {
+  io.on("connection", (socket: Socket) => {
     const userId = socket.data.userId as string | undefined;
     if (userId) {
       socket.join(`user:${userId}`);

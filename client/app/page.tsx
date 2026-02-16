@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { Button } from "@/components/button";
 
 export default function Home() {
   return (
@@ -11,9 +10,12 @@ export default function Home() {
         <p className="text-muted-foreground">
           Save links, keep them private, and see updates instantly across tabs.
         </p>
-        <Button asChild size="lg" className="w-full sm:w-auto">
-          <Link href="/login">Sign in with Google</Link>
-        </Button>
+        <Link
+          href="/login"
+          className="inline-flex items-center justify-center rounded-md bg-primary px-6 py-3 text-base font-medium text-primary-foreground transition-colors hover:bg-primary/90 w-full sm:w-auto"
+        >
+          Sign in with Google
+        </Link>
       </div>
     </div>
   );

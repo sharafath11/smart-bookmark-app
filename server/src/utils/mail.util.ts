@@ -40,7 +40,7 @@ export async function sendEmailOtp(
     });
 
     console.log(`OTP email sent to ${email}`);
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Failed to send OTP email", error);
     throw new Error("OTP_EMAIL_SEND_FAILED");
   }
