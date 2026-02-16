@@ -10,6 +10,7 @@ import { bookmarkMethods } from "@/services/methods/bookmarkMethods"
 import { User } from "@/types/user/authTypes"
 import { Bookmark } from "@/types/bookmark"
 import { validateBookmark } from "@/lib/validation/bookmark.validation"
+import { clearAuthCookie, setAuthCookie } from "@/utils/authCookie"
 import { showSuccessToast, showErrorToast } from "@/utils/toast"
 
 export default function DashboardPage() {
@@ -45,8 +46,10 @@ export default function DashboardPage() {
       const res = await userAuthMethods.me()
       if (res && res.ok) {
         setUser(res.data)
+        setAuthCookie()
         await fetchBookmarks()
       } else {
+        clearAuthCookie()
         router.push("/login")
       }
       setIsLoading(false)
@@ -73,6 +76,7 @@ export default function DashboardPage() {
     const res = await userAuthMethods.logout()
     if (res && res.ok) {
       showSuccessToast("Logged out successfully")
+      clearAuthCookie()
       router.push("/login")
     } else {
       showErrorToast("Logout failed")

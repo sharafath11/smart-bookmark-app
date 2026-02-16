@@ -4,10 +4,8 @@ import type { NextRequest } from "next/server"
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  const token = request.cookies.get("token")?.value
-  const refreshToken = request.cookies.get("refreshToken")?.value
-
-  const isAuthenticated = Boolean(token || refreshToken)
+  const authCookie = request.cookies.get("sb_auth")?.value
+  const isAuthenticated = Boolean(authCookie)
 
   const isAuthPage =
     pathname === "/login"
@@ -18,6 +16,7 @@ export function middleware(request: NextRequest) {
 
   if (isAuthenticated) {
     if (isAuthPage || isPublicPage) {
+      console.log("[Middleware] Authenticated user redirected to /dashboard")
       return NextResponse.redirect(
         new URL("/dashboard", request.url)
       )
@@ -26,6 +25,7 @@ export function middleware(request: NextRequest) {
   }
 
   if (!isAuthenticated && isDashboard) {
+    console.log("[Middleware] Unauthenticated user blocked from dashboard")
     return NextResponse.redirect(
       new URL("/login", request.url)
     )

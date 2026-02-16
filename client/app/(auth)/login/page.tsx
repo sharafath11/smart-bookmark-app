@@ -6,6 +6,7 @@ import { AuthCard } from "@/components/auth-card"
 import { Button } from "@/components/button"
 import { Alert } from "@/components/alert"
 import { userAuthMethods } from "@/services/methods/userMethods"
+import { setAuthCookie } from "@/utils/authCookie"
 import { showErrorToast, showSuccessToast } from "@/utils/toast"
 
 export default function LoginPage() {
@@ -57,6 +58,7 @@ export default function LoginPage() {
     }
 
     showSuccessToast(res.msg || "Login successful")
+    setAuthCookie()
     router.push("/dashboard")
   }
 
