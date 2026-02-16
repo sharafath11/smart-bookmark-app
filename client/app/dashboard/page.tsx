@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
 import { io, Socket } from "socket.io-client"
 import { Button } from "@/components/button"
+import { ConfirmModal } from "@/components/confirm-modal"
 import { Input } from "@/components/input"
 import { userAuthMethods } from "@/services/methods/userMethods"
 import { bookmarkMethods } from "@/services/methods/bookmarkMethods"
@@ -19,8 +20,10 @@ export default function DashboardPage() {
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
   const [formData, setFormData] = useState({ title: "", url: "" })
   const [errors, setErrors] = useState<{ title?: string; url?: string }>({})
+  const [deleteTarget, setDeleteTarget] = useState<Bookmark | null>(null)
 
   const socketUrl = useMemo(() => {
     if (process.env.NEXT_PUBLIC_SOCKET_URL) return process.env.NEXT_PUBLIC_SOCKET_URL
@@ -111,10 +114,14 @@ export default function DashboardPage() {
     }
   }
 
-  const handleDelete = async (id: string) => {
-    const res = await bookmarkMethods.remove(id)
+  const handleDelete = async () => {
+    if (!deleteTarget) return
+    setIsDeleting(true)
+    const res = await bookmarkMethods.remove(deleteTarget._id)
+    setIsDeleting(false)
     if (res && res.ok) {
       showSuccessToast("Bookmark deleted")
+      setDeleteTarget(null)
       await fetchBookmarks()
     }
   }
@@ -194,7 +201,7 @@ export default function DashboardPage() {
                       {bookmark.url}
                     </a>
                   </div>
-                  <Button variant="secondary" onClick={() => handleDelete(bookmark._id)}>
+                  <Button variant="secondary" onClick={() => setDeleteTarget(bookmark)}>
                     Delete
                   </Button>
                 </div>
@@ -203,6 +210,16 @@ export default function DashboardPage() {
           )}
         </div>
       </div>
+      <ConfirmModal
+        open={Boolean(deleteTarget)}
+        title="Delete bookmark?"
+        description={deleteTarget ? `This will remove "${deleteTarget.title}" from your list.` : undefined}
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        isLoading={isDeleting}
+        onConfirm={handleDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   )
 }
