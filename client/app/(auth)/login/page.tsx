@@ -86,10 +86,27 @@ export default function LoginPage() {
       <div className="space-y-4">
         {alertMessage && <Alert type="error" message={alertMessage} onClose={() => setAlertMessage("")} />}
 
-        <div
-          id="google-signin-container"
-          className={`min-h-11 w-full ${isGoogleReady ? "" : "opacity-50"}`}
-        />
+        <div className="relative">
+          <div
+            id="google-signin-container"
+            className={`min-h-11 w-full ${isGoogleLoading ? "pointer-events-none opacity-70" : ""}`}
+          />
+
+          {!isGoogleReady && (
+            <div className="absolute inset-0 flex items-center justify-center rounded-md border border-border bg-card">
+              <div className="h-5 w-5 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
+            </div>
+          )}
+
+          {isGoogleLoading && (
+            <div className="absolute inset-0 flex items-center justify-center rounded-md border border-border bg-card/90">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
+                <span>Signing you in...</span>
+              </div>
+            </div>
+          )}
+        </div>
 
         {!isGoogleReady && (
           <p className="text-center text-xs text-muted-foreground">
